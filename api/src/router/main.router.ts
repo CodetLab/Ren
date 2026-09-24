@@ -1,8 +1,30 @@
-import express from "express";
-const r = express.Router();
+import { Router } from "express";
+import { askLlama } from "../service/llama.ts";
 
-import chatRouter from "./chat.router.js";
+const router = Router();
 
-r.use("/chat", chatRouter);
+router.post("/v1/chat", async (req, res) => {
+  const { message } = req.body;
 
-export default r
+  if (!message || typeof message !== "string") {
+    return res.status(400).json({
+      error: "message is required",
+    });
+  }
+
+  try {
+    const response = await askLlama(message);
+
+    return res.json({
+      response,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "local model unavailable",
+    });
+  }
+});
+
+export default router;
